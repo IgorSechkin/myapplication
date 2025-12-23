@@ -1,0 +1,162 @@
+Файл PHP
+
+PHP имеет некоторые встроенные функции для обработки JSON.
+
+Объекты в PHP могут быть преобразованы в JSON с помощью функции PHP json_encode ():
+Файл PHP
+<? PHP
+$ myObj-> name = "John";
+$ myObj-> age = 30;
+$ myObj-> city = "Нью-Йорк";
+
+$ myJSON = json_encode ($ myObj);
+
+echo $ myJSON;
+?>
+Клиентский JavaScript
+
+Вот JavaScript на клиенте, используя вызов AJAX для запроса файла PHP из приведенного выше примера:
+пример
+
+Используйте JSON.parse () для преобразования результата в объект JavaScript:
+var xmlhttp = new XMLHttpRequest ();
+xmlhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        var myObj = JSON.parse (this.responseText);
+        document.getElementById ("demo"). innerHTML = myObj.name;
+    }
+};
+xmlhttp.open ("GET", "demo_file.php", true);
+xmlhttp.send ();
+PHP-массив
+
+Массивы в PHP также будут преобразованы в JSON при использовании функции PHP json_encode ():
+Файл PHP
+<? PHP
+$ myArr = массив («Джон», «Мария», «Питер», «Салли»);
+
+$ myJSON = json_encode ($ myArr);
+
+echo $ myJSON;
+?>
+Клиентский JavaScript
+
+Вот JavaScript на клиенте, используя вызов AJAX для запроса файла PHP из приведенного выше массива:
+пример
+
+Используйте JSON.parse () для преобразования результата в массив JavaScript:
+var xmlhttp = new XMLHttpRequest ();
+xmlhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        var myObj = JSON.parse (this.responseText);
+        document.getElementById ("demo"). innerHTML = myObj [2];
+    }
+};
+xmlhttp.open ("GET", "demo_file_array.php", true);
+xmlhttp.send ();
+База данных PHP
+
+PHP является языком программирования на стороне сервера и должен использоваться для операций, которые могут выполняться только сервером, например, для доступа к базе данных.
+
+Представьте, что на сервере имеется база данных, содержащая клиентов, продукты и поставщиков.
+
+Вы хотите сделать запрос на сервер, на котором вы запрашиваете первые 10 записей в таблице «клиенты»:
+пример
+
+Используйте JSON.stringify () для преобразования объекта JavaScript в JSON:
+obj = {"table": "customers", "limit": 10};
+dbParam = JSON.stringify (obj);
+xmlhttp = new XMLHttpRequest ();
+xmlhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        document.getElementById ("demo"). innerHTML = this.responseText;
+    }
+};
+xmlhttp.open ("GET", "json_demo_db.php? x =" + dbParam, true);
+xmlhttp.send ();
+Пример:
+
+    Определите объект, содержащий свойство table и свойство limit.
+    Преобразуйте объект в строку JSON.
+    Отправьте запрос в файл PHP, а в качестве параметра - строку JSON.
+    Подождите, пока запрос вернется с результатом (как JSON)
+    Отобразить результат, полученный из файла PHP.
+
+Взгляните на файл PHP:
+Файл PHP
+<? PHP
+header («Content-Type: application / json; charset = UTF-8»);
+$ obj = json_decode ($ _ GET ["x"], false);
+
+$ conn = new mysqli («myServer», «myUser», «myPassword», «Northwind»);
+$ stmt = $ conn-> prepare ("SELECT name FROM? LIMIT?");
+$ stmt-> bind_param ("ss", $ obj-> table, $ obj-> limit);
+$ Stmt-> Execute ();
+$ result = $ stmt-> get_result ();
+$ outp = $ result-> fetch_all (MYSQLI_ASSOC);
+
+echo json_encode ($ outp);
+?>
+PHP-файл объясняется:
+
+    Преобразуйте запрос в объект, используя функцию PHP json_decode ().
+    Получите доступ к базе данных и заполните массив запрошенными данными.
+    Добавьте массив к объекту и верните объект как JSON с помощью функции json_encode ().
+
+Петля через результат
+
+Преобразуйте полученный результат из файла PHP в объект JavaScript или в этом случае массив JavaScript:
+пример
+
+Используйте JSON.parse () для преобразования JSON в объект JavaScript:
+...
+xmlhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        myObj = JSON.parse (this.responseText);
+        для (x в myObj) {
+            txt + = myObj [x] .name + "<br>";
+        }
+        document.getElementById ("demo"). innerHTML = txt;
+    }
+};
+...
+PHP-метод = POST
+
+При отправке данных на сервер часто лучше использовать метод HTTP POST.
+
+Чтобы отправить запросы AJAX с использованием метода POST, укажите метод и правильный заголовок.
+
+Данные, отправленные на сервер, теперь должны быть аргументом метода .send ():
+пример
+obj = {"table": "customers", "limit": 10};
+dbParam = JSON.stringify (obj);
+xmlhttp = new XMLHttpRequest ();
+xmlhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+        myObj = JSON.parse (this.responseText);
+        для (x в myObj) {
+            txt + = myObj [x] .name + "<br>";
+        }
+        document.getElementById ("demo"). innerHTML = txt;
+    }
+};
+xmlhttp.open ("POST", "json_demo_db_post.php", true);
+xmlhttp.setRequestHeader («Content-type», «application / x-www-form-urlencoded»);
+xmlhttp.send ("x =" + dbParam);
+
+Единственное отличие в файле PHP - это метод получения переданных данных.
+Файл PHP
+
+Используйте $ _POST вместо $ _GET:
+<? PHP
+header («Content-Type: application / json; charset = UTF-8»);
+$ obj = json_decode ($ _ POST ["x"], false);
+
+$ conn = new mysqli («myServer», «myUser», «myPassword», «Northwind»);
+$ stmt = $ conn-> prepare ("SELECT name FROM? LIMIT?");
+$ stmt-> bind_param ("ss", $ obj-> table, $ obj-> limit);
+$ Stmt-> Execute ();
+$ result = $ stmt-> get_result ();
+$ outp = $ result-> fetch_all (MYSQLI_ASSOC);
+
+echo json_encode ($ outp);
