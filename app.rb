@@ -26,12 +26,12 @@ class App
     @sock = env["puma.socket"]
     resp = Response.new(env)
     # # p resp.send_data
-    [200, {"content-type" => "text/html"}, [resp.send_data] ]
+    # [200, {"content-type" => "text/html"}, [resp.send_data] ]
     # p @type[@env_type]
     # p get_template{get_block_template(@path_info)}
     # p get_content_type(@env_type)
     # [200, {"content-type" => "#{@type[@env_type]}"}, [get_template{get_block_template(@path_info)}] ]
-    # [200, {"content-type" => "#{get_content_type(@env_type)}"}, [get_template{get_block_template(@path_info)}] ]
+    [200, {"content-type" => "#{get_content_type(@env_type)}"}, [get_template{get_block_template(@path_info)}] ]
   end
 
   private
