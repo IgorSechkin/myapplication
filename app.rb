@@ -24,7 +24,7 @@ class App
     @path_info = env["REQUEST_PATH"]
     @env_type = env["HTTP_SEC_FETCH_DEST"]
     @sock = env["puma.socket"]
-    # resp = Response.new(env)
+    resp = Response.new(env)
     # # p resp.send_data
     [200, {"content-type" => "text/html"}, [resp.send_data] ]
     # p @type[@env_type]
