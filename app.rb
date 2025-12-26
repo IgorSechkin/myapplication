@@ -2,7 +2,9 @@ require 'erb'
 require 'open3'
 require './resp'
 # require './serv_drb'
-
+Thread.new {
+      system("ruby serv_drb.rb")
+}
 
 class App
   attr_accessor :body, :env_type, :sock, :path_info, :type
@@ -15,8 +17,8 @@ class App
   end
 
   def call(env)
-    # DRb.start_service
-    # ro = DRbObject.new_with_uri("druby://localhost:9000")
+    DRb.start_service
+    ro = DRbObject.new_with_uri("druby://localhost:9000")
     # p "params = #{env["rack.input"].read}"
     # env.each{|en| p en}
     @path_info = env["REQUEST_PATH"]
@@ -24,12 +26,12 @@ class App
     @sock = env["puma.socket"]
     # resp = Response.new(env)
     # # p resp.send_data
-    # [200, {"content-type" => "text/html"}, [resp.send_data] ]
+    [200, {"content-type" => "text/html"}, [resp.send_data] ]
     # p @type[@env_type]
     # p get_template{get_block_template(@path_info)}
     # p get_content_type(@env_type)
     # [200, {"content-type" => "#{@type[@env_type]}"}, [get_template{get_block_template(@path_info)}] ]
-    [200, {"content-type" => "#{get_content_type(@env_type)}"}, [get_template{get_block_template(@path_info)}] ]
+    # [200, {"content-type" => "#{get_content_type(@env_type)}"}, [get_template{get_block_template(@path_info)}] ]
   end
 
   private
