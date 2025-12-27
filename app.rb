@@ -1,106 +1,89 @@
-require 'erb'
+require 'drb'
 require 'open3'
-require './resp'
-# require './serv_drb'
-# Thread.new {
-#       system("ruby serv_drb.rb")
-# }
+require 'erb'
 
+Thread.new {
+      system("ruby serv_drb.rb")
+}
 class App
-  attr_accessor :body, :env_type, :sock, :path_info, :type
-
+  attr_accessor :str
   def initialize()
+    @str = nil
 
-    @mutex = Thread::Mutex.new
-    @type = Type_struct.new("text/html", "text/css", "image/gif", "text/css", "text/css", "application/json", "text/javascript", "application/octet-stream")
-    
   end
 
   def call(env)
-    # DRb.start_service
-    # ro = DRbObject.new_with_uri("druby://localhost:9000")
-    # p "params = #{env["rack.input"].read}"
-    # env.each{|en| p en}
-    @path_info = env["REQUEST_PATH"]
-    @env_type = env["HTTP_SEC_FETCH_DEST"]
-    @sock = env["puma.socket"]
-    # resp = Response.new(env)
-    # # p resp.send_data
-    # [200, {"content-type" => "text/html"}, [resp.send_data] ]
-    # p @type[@env_type]
-    # p get_template{get_block_template(@path_info)}
-    # p get_content_type(@env_type)
-    # [200, {"content-type" => "#{@type[@env_type]}"}, [get_template{get_block_template(@path_info)}] ]
-    [200, {"content-type" => "#{get_content_type(@env_type)}"}, [get_template{get_block_template(@path_info)}] ]
+    # загружаем drb сервер
+    
+    meth = env["REQUEST_PATH"].delete("/")
+    sock = env["puma.socket"]
+    DRb.start_service
+    ro = DRbObject.new_with_uri("druby://localhost:9000")
+    
+=begin 
+. (Точка): Любой один символ, кроме символа новой строки (newline, \n).
+\w: Любой буквенно-цифровой символ и знак подчеркивания ([a-zA-Z0-9_]).
+\S: Любой непробельный символ.
+\s: Любой пробельный символ (пробел, табуляция, новая строка и т.д.). 
+
+Для любой последовательности (включая новую строку)
+
+.* (.*): Любая последовательность из нуля или более символов (кроме новой строки).
+[\s\S]: Любой символ, включая новую строку (сочетание всех пробельных и непробельных символов).
+(?s): Флаг, который включает модификатор . (точка) для соответствия новой строке (используется в некоторых движках регулярных выражений). 
+=end
+    if meth =~ /\w+\.(?:mp4|avi|js|css|jpg|jpeg|png|mp3|xml|json|ico|txt)/
+      # получить html запрос 
+      str = ro.read_file(meth, env["HTTP_SEC_FETCH_DEST"] )
+      sock.write str
+      sock.close
+    
+    elsif meth =~ /([^=]+)=([^;]+)/ 
+      # "<meta http-equiv=\"Refresh\" content=\"0; URL=home.html\"/>"
+      coockie = "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nSet-Cookie: /#{file}; Path=/; secure; SameSite=Lax;"
+      sock.write coockie 
+      sock.close
+    else
+    end
+      
+    
+
+@str = nil
+    
+@str = templ(){
+      if meth == ""
+        IO.read("./public/page.html")
+      elsif meth == "home" || meth == "show_post" ||  meth == "aboutus" ||  meth == "info" || meth == "new_post" || meth == "new_user" ||
+            meth == "contacts" || meth == "page" || meth == "users" || meth == "session" || meth == "show_tovar" || meth == "delete_user" ||
+            meth == "books"
+            p "-------------------------------------------------"
+             # нужно что-то придумать что-бы пропускало только указатель на ресурс 
+
+        if env["REQUEST_METHOD"] == "POST"
+          # p meth
+          # p env["rack.input"].read
+          ERB.new(ro.send(meth, env["rack.input"])).result(binding) 
+        else
+          ERB.new(ro.send(meth)).result(binding) 
+        end
+
+      end
+    }
+
+    [200, {"content-type" => "text/html"}, [@str]] # это нужно куда-то перенести
+
   end
 
   private
-
-  def get_template
-    return ERB.new(IO.read('template.html.erb')).result(binding) if block_given?
+  def templ
+    ERB.new(IO.read("./public/template.html.erb")).result(binding) if block_given?
   end
-
-  def get_block_template(arg)
-    file = arg.delete("/") if arg != nil
-    if file != "" && file != nil
-      # поиск файла в текущуй директории
-      find_comm = "find . -type f -name #{file}"
-      # find_comm = "find . -name #{file}"
-      fstdout, fstderr, fstatus = Open3.capture3(find_comm)
-    end
-    p file
-    if fstdout =~ /\D+\.(?:png|jpeg|jpg|avi|mp4|xml|mp3|ico|css|xml|js|json|txt)/
-      file = File.binread(fstdout.chomp)
-      str = "HTTP/1.1 200 OK\r\nContent-Type: #{get_content_type(@env_type)}\r\nContent-Length: #{file.size}\r\n\r\n#{file}"
-      @sock.write str
-    # elsif fstdout =~ /\D+\.(?:css|xml|js|json|php|txt)/
-    #   file = File.binread(fstdout.chomp)
-    #   file.unpack("U*").pack("C*")
-    elsif fstdout =~ /\D+\.(?:php)/
-      # file = File.binread(fstdout.chomp)
-      # str = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: #{file.size}\r\n\r\n#{file}"
-      str = system("php .#{fstdout.chomp}")
-      # @sock.write str
-    elsif @path_info == "/"
-      File.binread("public/index.html")
-    elsif fstdout =~ /\D+\.(?:html)/
-      File.binread(fstdout.chomp)
-    # elsif fstdout == "home" || fstdout == "show_post" ||  fstdout == "aboutus" ||  fstdout == "info" || fstdout == "new_post" ||
-    #         fstdout == "contacts" || fstdout == "page" || fstdout == "users" || fstdout == "session" || fstdout == "show_tovar" # нужно что-то придумать что-бы пропускало только указатель на ресурс 
-    #     if env["REQUEST_METHOD"] == "POST"
-    #       ERB.new(ro.send(fstdout, env["rack.input"])).result(binding) 
-    #     else
-    #       ERB.new(ro.send(fstdout)).result(binding) 
-    #     end
-    elsif fstdout =~ /([^=]+)=([^;]+)/
-      "HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nSet-Cookie: #{arg}; HttpOnly; secure; SameSite=Lax;\r\nContent-Length: #{arg.size}\r\n\r\n#{arg}"
-    else
-
-    end
-
-  end
-
-  def get_content_type(arg)
-    if arg == "document"
-      return "text/html"
-    elsif arg == "style"
-      return "text/css"
-    elsif arg == "image"
-      return "image/gif"
-    elsif arg == "audio"
-      return "audio/mpeg"
-    elsif arg == "video"
-      return "video/mp4"
-    elsif arg == "manifest"
-      return "application/json"
-    elsif arg == "script"
-      return "text/javascript"
-    elsif arg == "empty"
-      return "application/xml; charset=utf-8"
-    else
-      return "text/html"
-    end
-
-  end
-
+    
+   
 end
+
+# "HTTP_SEC_FETCH_DEST"=>"document"
+# "REQUEST_METHOD"=>"GET"
+# env["HTTP_COOKIE"]
+# "CONTENT_LENGTH"=>"25"
+# env["rack.input"]
