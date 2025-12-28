@@ -18,6 +18,10 @@
     <p>Password: <%= d[6] %></p>
     <p>Admin: <%= d[7] %></p>
     <p>Phone: <%= d[8] %></p>
+    <form action="delete_user" method="POST">
+        <input type="text" name="id" value="<%= "#{d[0]}" %>" hidden>
+        <input type="submit" value="delete user">
+    </form>
     
     <hr>
     <% end %>
