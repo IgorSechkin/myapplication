@@ -60,11 +60,11 @@ class MyService
     # распарсить str в хэш
     p pars = parse(user)
     # открыть базу даных
-    # db = SQLite3::Database.new("dev.sqlite3")
+    db = SQLite3::Database.new("dev.sqlite3")
     # # занести даные
-    # db.execute "INSERT INTO users(name, email, created_at, password, phone) VALUES ('#{pars["name"]}', '#{pars["email"]}', '#{Time.now}', '#{ Base64.encode64(pars["password"])}', '#{pars["phone"]}' );"
+    db.execute "INSERT INTO users(name, email, created_at, password, phone) VALUES ('#{pars["name"]}', '#{pars["email"]}', '#{Time.now}', '#{ Base64.encode64(pars["password"])}', '#{pars["phone"]}' );"
     # # закрыть базу данных
-    # db.close
+    db.close
     # перенаправить на другой ресурс
     File.read("./public/page.html") 
   end
@@ -207,3 +207,4 @@ puts "Сервер запущен на druby://:9000"
 DRb.thread.join
 
 # system("kill #{Process.pid}")
+
