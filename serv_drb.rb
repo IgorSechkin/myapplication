@@ -50,8 +50,6 @@ class MyService
   end
 
   def new_user(str)
-
-    require 'base64'
     # получить str
     user = str.read
     # перекодировать строку
@@ -70,8 +68,6 @@ class MyService
   end
 
   def session(str)
-
-    require 'base64'
     # получить str
     us = str.read
     # перекодировать строку
@@ -207,4 +203,5 @@ puts "Сервер запущен на druby://:9000"
 DRb.thread.join
 
 # system("kill #{Process.pid}")
+
 
